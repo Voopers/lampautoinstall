@@ -7,7 +7,7 @@
 ## 🔄️Install
 Copas Saja Link Berikut Ini Ke Terminal Server Kalian
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/thehashslinging/lampautoinstall/refs/heads/main/autoLAMP.bash)
+bash <(curl -s https://raw.githubusercontent.com/Voopers/lampautoinstall/refs/heads/main/autoLAMP.bash)
 ```
 
 ⚠️Warning
