@@ -8,11 +8,10 @@ sudo apt update && sudo apt upgrade -y
 echo "Menginstal Apache2..."
 sudo apt install -y apache2
 
-# Ubah konfigurasi Apache untuk menggunakan port 2002
+# Ubah konfigurasi Apache untuk menggunakan port 2002 (FIX AMAN)
 echo "Mengubah konfigurasi Apache ke port 2002..."
-sudo sed -i 's/80/2002/g' /etc/apache2/ports.conf
-sudo sed -i 's/:80/:2002/g' /etc/apache2/sites-enabled/000-default.conf
-sudo sed -i 's/:80/:2002/g' /etc/apache2/sites-available/000-default.conf
+sudo sed -i 's/Listen 80/Listen 2002/g' /etc/apache2/ports.conf
+sudo sed -i 's/<VirtualHost \*:80>/<VirtualHost *:2002>/g' /etc/apache2/sites-available/000-default.conf
 
 # Restart Apache untuk menerapkan perubahan
 echo "Restarting Apache..."
@@ -26,14 +25,25 @@ sudo apt install -y php libapache2-mod-php php-mysql php-mbstring php-xml php-cu
 echo "Menginstal phpMyAdmin..."
 sudo apt install -y phpmyadmin
 
-# Nonaktifkan strict mode di MariaDB
+# Nonaktifkan strict mode di MariaDB (FIX SUPPORT mariadbd)
 echo "Menonaktifkan strict mode di MariaDB..."
-sudo sed -i '/\[mysqld\]/a sql_mode=""' /etc/mysql/mariadb.conf.d/50-server.cnf
+CONFIG_FILE="/etc/mysql/mariadb.conf.d/50-server.cnf"
 
-# Mengatur batas upload dan import phpMyAdmin menjadi 100MB
+if grep -q "\[mariadbd\]" $CONFIG_FILE; then
+    sudo sed -i '/\[mariadbd\]/a sql_mode=""' $CONFIG_FILE
+elif grep -q "\[mysqld\]" $CONFIG_FILE; then
+    sudo sed -i '/\[mysqld\]/a sql_mode=""' $CONFIG_FILE
+else
+    echo -e "\n[mariadbd]\nsql_mode=\"\"" | sudo tee -a $CONFIG_FILE > /dev/null
+fi
+
+# Mengatur batas upload dan import phpMyAdmin menjadi 100MB (FIX LOOP)
 echo "Mengatur batas upload dan import phpMyAdmin menjadi 100MB..."
-sudo sed -i '/upload_max_filesize/c\upload_max_filesize = 100M' /etc/php/*/apache2/php.ini
-sudo sed -i '/post_max_size/c\post_max_size = 100M' /etc/php/*/apache2/php.ini
+for file in /etc/php/*/apache2/php.ini
+do
+    sudo sed -i 's/^upload_max_filesize.*/upload_max_filesize = 100M/' $file
+    sudo sed -i 's/^post_max_size.*/post_max_size = 100M/' $file
+done
 
 # Restart MariaDB untuk menerapkan perubahan
 echo "Restarting MariaDB..."
